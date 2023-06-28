@@ -1,0 +1,79 @@
+{
+	"info": {
+		"_postman_id": "79cfb5de-a2ab-4548-aa54-4a1712bf67a4",
+		"name": "TestNewman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "838575"
+	},
+	"item": [
+		{
+			"name": "test_ok",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:52773/test_ok",
+					"host": [
+						"localhost"
+					],
+					"port": "52773",
+					"path": [
+						"test_ok"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test_ko",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:52773/test_ko",
+					"host": [
+						"localhost"
+					],
+					"port": "52773",
+					"path": [
+						"test_ko"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Verificar código de cabecera\", function () {",
+					"    pm.response.have.status(200);",
+					"});"
+				]
+			}
+		}
+	]
+}

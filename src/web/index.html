@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>IRIS Api Tester</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+
+    
+    .header {
+      background: linear-gradient(to right, #005b9f, #0082cc);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+
+    .dropzone-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+
+    .dropzone {
+      width: 300px;
+      height: 200px;
+      border: 2px dashed #ddd;
+      text-align: center;
+      padding: 40px;
+      margin: 20px auto;
+      background-color: #fff;
+      transition: border-color 0.3s ease;
+    }
+
+    .dropzone:hover {
+      border-color: #aaa;
+    }
+
+    .dropzone p {
+      margin: 0;
+      font-size: 16px;
+      font-weight: bold;
+      color: #888;
+    }
+
+    .button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 150px;
+      height: 40px;
+      margin: 20px auto;
+      background-color: #333;
+      color: white;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #555;
+    }
+
+    .button-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease;
+    }
+
+    .button.loading .button-text {
+      opacity: 0;
+    }
+
+    .button.loading::after {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -11px;
+      margin-left: -11px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #result {
+      width: 300px;
+      height: 200px;
+      margin: 20px auto;
+      resize: none;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>IRIS Api Tester</h1>
+  </div>
+
+  <div class="dropzone-container">
+    <div class="dropzone" id="dropzone">
+      <p>Drag and drop collection's JSON file</p>
+    </div>
+    <textarea id="result" readonly></textarea>
+    <button class="button" id="runButton">
+      <span class="button-text">Run Test</span>
+    </button>
+  </div>
+
+  <script>
+    document.getElementById('dropzone').addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.style.borderColor = '#aaa';
+    });
+
+    document.getElementById('dropzone').addEventListener('dragleave', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.style.borderColor = '#ddd';
+    });
+
+    document.getElementById('dropzone').addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.style.borderColor = '#ddd';
+
+      var files = e.dataTransfer.files;
+      if (files.length > 0) {
+        var file = files[0];
+
+        if (file.type === 'application/json') {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var contents = e.target.result;
+            document.getElementById('result').value = contents;
+          };
+          reader.readAsText(file);
+
+          // Actualizar el texto del dropzone con el nombre del archivo arrastrado
+          document.getElementById('dropzone').innerHTML = '<p>' + file.name + '</p>';
+        } else {
+          alert('El archivo debe estar en formato JSON');
+        }
+      }
+    });
+
+    document.getElementById('runButton').addEventListener('click', function() {
+      
+      
+      var testAreaContent = document.getElementById('result').value;
+      //var cleanContent = testAreaContent.replace(/\s/g, ""); // Eliminar espacios en blanco, tabulaciones y saltos de línea
+
+      var parsedContent = JSON.parse(testAreaContent); // Convertir a objeto JSON válido
+
+      var requestData = {
+        collection: parsedContent
+      };
+
+      var button = document.getElementById('runButton');
+      button.classList.add('loading');
+      button.disabled = true;
+
+      fetch('http://localhost:52773/run_tests', {
+        method: 'POST',
+        body: JSON.stringify(requestData)
+      })
+      .then(function(response) {
+        window.location.href = 'http://localhost:52773/show_report';
+
+        button.classList.remove('loading');
+        button.disabled = false;
+
+      })
+      .catch(function(error) {
+        button.classList.remove('loading');
+        button.disabled = false;
+      });
+    });
+  </script>
+</body>
+</html>
