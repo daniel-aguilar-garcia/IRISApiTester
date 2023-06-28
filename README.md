@@ -11,7 +11,7 @@ Add some test to your collection (In this example I'm adding a global test for t
 
 
 
-Export your collection in json format
+Export your collection in json format (For try the app you can use the testCollectionExample.json located on the src folder)
 
 
 Start the docker-compose file and access to the url http://localhost:52773/csp/user/index.html
