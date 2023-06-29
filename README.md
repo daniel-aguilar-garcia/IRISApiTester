@@ -1,4 +1,6 @@
 
+![CODE QUALITY](https://github.com/daniel-aguilar-garcia/IRISApiTester/blob/main/screenshots/qualitycode.png)
+
 # Project with InterSystems IRIS + Newman to test Apis and get an html report
 
 
