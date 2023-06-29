@@ -32,10 +32,12 @@ ClassMethod TestKO() As %Status
 
     Set %response.Status=500
     Set message = ""
+    Set a=1
+    Set b=0
     
     
     try{
-        Set a= 1 / 0
+        Set x= a / b
     }catch(e)
     {
         Set message = e.DisplayString(1)
@@ -91,7 +93,7 @@ ClassMethod RunTestsJSON() As %Status
     
     } catch e {
         Set tSC=e.AsStatus()
-        Set pOutput = tSC
+        
     }
  
     Quit tSC
