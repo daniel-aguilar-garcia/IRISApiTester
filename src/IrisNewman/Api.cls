@@ -38,6 +38,7 @@ ClassMethod TestKO() As %Status
     
     try{
         Set x= a / b
+        Write x
     }catch(e)
     {
         Set message = e.DisplayString(1)
