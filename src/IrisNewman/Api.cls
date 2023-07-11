@@ -5,6 +5,8 @@ Parameter htmlOutputFile As %String = "/opt/irisapp/testExecution.html";
 
 Parameter collectionFile As %String = "/opt/irisapp/myCollection.json";
 
+Parameter collectionRepoPath As %String = "/opt/irisapp/api-test";
+
 // "/opt/irisapp/src/testCollectionExample.json";
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
@@ -12,6 +14,8 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Routes>
     <!-- Run tests -->
     <Route Url="/run_tests" Method="POST" Call="RunTestsJSON" Cors="true"/>
+    <!-- Update Collection and run test -->
+    <Route Url="/pull_and_run_tests" Method="GET" Call="PullRunTestsJSON" Cors="true"/>
     <!-- Show Report -->
     <Route Url="/show_report" Method="GET" Call="ShowReport" Cors="true"/>
     <!-- example tests ok -->
@@ -30,7 +34,7 @@ ClassMethod TestOK() As %Status
 ClassMethod TestKO() As %Status
 {
 
-    Set %response.Status=500
+    Set %response.Status=401
     Set message = ""
     Set a=1
     Set b=0
@@ -55,9 +59,9 @@ ClassMethod ShowReport() As %Status
 
     Set archivo = ##class(%Stream.FileCharacter).%New()
     
-    Set ruta = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+    //Set ruta = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
     
-    If archivo.LinkToFile(ruta) {
+    If archivo.LinkToFile(..#htmlOutputFile) {
         
         Do archivo.OutputToDevice()
         
@@ -67,6 +71,49 @@ ClassMethod ShowReport() As %Status
 
     
     Quit $$$OK
+}
+
+ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinationFile As %String) [ Language = python ]
+{
+    import os
+    import subprocess
+    import shutil
+    from configparser import ConfigParser
+
+    config = ConfigParser()
+    config.read('/opt/irisapp/bitbucket.cfg')
+    
+    bitbucket_username = config.get('repo', 'username')
+    bitbucket_token_app = config.get('repo', 'apptoken')
+    bitbucket_repository = config.get('repo', 'repository')
+    bitbucket_collection_path = config.get('repo', 'collection_path')
+    bitbucket_collection_path = bitbucket_collection_path.replace("'","")
+
+    # Borramos carpeta del repositorio si existe
+    try: 
+        shutil.rmtree(collectionRepoPath)
+    except:
+        print('')    
+        # no existe carpeta
+
+    # URL del repositorio de Bitbucket
+    repository_url = f'https://{bitbucket_username}:{bitbucket_token_app}@{bitbucket_repository}'
+    
+
+    # Comando para clonar el repositorio utilizando Git
+    command = f'git clone {repository_url} {collectionRepoPath}'
+
+    # Ejecutar el comando de clonación utilizando Git
+    subprocess.call(command, shell=True)
+
+    # Configurar COPY_BUFSIZE en un valor grande
+    shutil.COPY_BUFSIZE = 1024 * 1024  # 1 MB
+
+    # Copiar el archivo sobrescribiendo el destino si existe
+    try:
+        shutil.copy(bitbucket_collection_path, destinationFile) 
+    except Exception as e:
+        print(str(e))
 }
 
 ClassMethod RunTestsJSON() As %Status
@@ -87,6 +134,29 @@ ClassMethod RunTestsJSON() As %Status
         
         Do ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
 
+        Do ..ShowReport()
+ 
+        Set tSC=$$$OK
+   
+    
+    } catch e {
+        Set tSC=e.AsStatus()
+        
+    }
+ 
+    Quit tSC
+}
+
+ClassMethod PullRunTestsJSON() As %Status
+{
+  
+    Do ..DownloadCollectionFromRepo(..#collectionRepoPath,..#collectionFile)
+    
+    try {
+
+        Set source = %request.Content
+
+        Do ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
         Do ..ShowReport()
  
         Set tSC=$$$OK

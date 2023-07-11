@@ -19,6 +19,9 @@ Export your collection in json format (For try the app you can use the testColle
 Start the docker-compose file and access to the url 
 http://localhost:52773/csp/user/index.html
 
+Pull repo and pass test:
+http://localhost:52773/pull_and_run_tests
+
 
 Drop the exported collection and press the "Run test" button
 

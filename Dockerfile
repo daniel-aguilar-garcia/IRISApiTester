@@ -31,6 +31,9 @@ RUN apt-get update && \
     npm install -g newman && \
     npm install -g newman-reporter-htmlextra
 
+## Install bitbucket and configparser libraries
+RUN pip3 install --target /usr/irissys/mgr/python/ configparser
+COPY bitbucket.cfg /opt/irisapp/bitbucket.cfg
 
 
 USER ${ISC_PACKAGE_MGRUSER}
