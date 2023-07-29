@@ -5,7 +5,7 @@ Parameter htmlOutputFile As %String = "/opt/irisapp/testExecution.html";
 
 Parameter collectionFile As %String = "/opt/irisapp/myCollection.json";
 
-Parameter collectionRepoPath As %String = "/opt/irisapp/api-test";
+Parameter collectionRepoPath As %String = "/opt/irisapp/";
 
 // "/opt/irisapp/src/testCollectionExample.json";
 
@@ -26,6 +26,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
     </Routes>
 }
 
+/*
 ClassMethod TestOK() As %Status
 {
     Quit $$$OK
@@ -50,8 +51,7 @@ ClassMethod TestKO() As %Status
 
 
     Quit $$$ERROR(5001,message)
-}
-
+}*/
 ClassMethod ShowReport() As %Status
 {
     Set %response.ContentType = "text/html"
@@ -81,13 +81,19 @@ ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinatio
     from configparser import ConfigParser
 
     config = ConfigParser()
-    config.read('/opt/irisapp/bitbucket.cfg')
+    config.read('/opt/irisapp/repository.cfg')
     
-    bitbucket_username = config.get('repo', 'username')
-    bitbucket_token_app = config.get('repo', 'apptoken')
-    bitbucket_repository = config.get('repo', 'repository')
-    bitbucket_collection_path = config.get('repo', 'collection_path')
-    bitbucket_collection_path = bitbucket_collection_path.replace("'","")
+    platform = config.get('repo', 'platform').replace("'","")
+    
+    username = config.get('repo', 'username')
+    token_app = config.get('repo', 'apptoken')
+    repository = config.get('repo', 'repository')
+    collection_path = config.get('repo', 'collection_path')
+    repository_name = config.get('repo', 'repository_name')
+    repository_name = repository_name.replace("'","")
+    collection_path = collection_path.replace("'","")
+    collection_full_path = collectionRepoPath + repository_name + '/' + collection_path
+    collectionRepoPath = collectionRepoPath + repository_name
 
     # Borramos carpeta del repositorio si existe
     try: 
@@ -95,10 +101,16 @@ ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinatio
     except:
         print('')    
         # no existe carpeta
-
-    # URL del repositorio de Bitbucket
-    repository_url = f'https://{bitbucket_username}:{bitbucket_token_app}@{bitbucket_repository}'
     
+    if (platform == 'github'):
+        # URL del repositorio de github
+        repository_url = f'https://{username}:{token_app}@github.com/{username}/{repository_name}.git'
+    elif (platform == 'bitbucket'):
+        # URL del repositorio de Bitbucket
+        repository_url = f'https://{username}:{token_app}@{repository}'
+    else:
+        raise Exception("Platform not supported")
+
 
     # Comando para clonar el repositorio utilizando Git
     command = f'git clone {repository_url} {collectionRepoPath}'
@@ -111,7 +123,7 @@ ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinatio
 
     # Copiar el archivo sobrescribiendo el destino si existe
     try:
-        shutil.copy(bitbucket_collection_path, destinationFile) 
+        shutil.copy(collection_full_path, destinationFile) 
     except Exception as e:
         print(str(e))
 }
