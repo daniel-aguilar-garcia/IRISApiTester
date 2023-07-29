@@ -26,32 +26,6 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
     </Routes>
 }
 
-/*
-ClassMethod TestOK() As %Status
-{
-    Quit $$$OK
-}
-
-ClassMethod TestKO() As %Status
-{
-
-    Set %response.Status=401
-    Set message = ""
-    Set a=1
-    Set b=0
-    
-    
-    try{
-        Set x= a / b
-        Write x
-    }catch(e)
-    {
-        Set message = e.DisplayString(1)
-    }
-
-
-    Quit $$$ERROR(5001,message)
-}*/
 ClassMethod ShowReport() As %Status
 {
     Set %response.ContentType = "text/html"
@@ -104,7 +78,10 @@ ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinatio
     
     if (platform == 'github'):
         # URL del repositorio de github
-        repository_url = f'https://{username}:{token_app}@github.com/{username}/{repository_name}.git'
+        if (username == "''"):
+            repository_url = repository.replace("'","")
+        else:
+            repository_url = f'https://{username}:{token_app}@github.com/{username}/{repository_name}.git'
     elif (platform == 'bitbucket'):
         # URL del repositorio de Bitbucket
         repository_url = f'https://{username}:{token_app}@{repository}'
