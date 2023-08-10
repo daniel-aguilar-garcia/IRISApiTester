@@ -43,6 +43,7 @@ COPY  src src
 COPY module.xml module.xml
 COPY iris.script /tmp/iris.script
 COPY src/web/index.html /usr/irissys/csp/user/index.html
+COPY src/web/home.html /usr/irissys/csp/user/home.html
 
 
 

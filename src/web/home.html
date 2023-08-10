@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Web Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+        
+        #sidebar {
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            padding-top: 20px;
+            height: 100vh;
+        }
+        
+        #sidebar-header {
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        #content {
+            flex: 1;
+            padding: 20px;
+            position: relative; /* Para posicionar el iframe */
+        }
+        
+        #menu a {
+            display: block;
+            padding: 10px 20px;
+            color: #fff;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        #menu a:hover {
+            background-color: #444;
+        }
+
+        #iframe-container {
+            width: 100%;
+            height: calc(100vh - 40px); /* Considerando el padding del contenido */
+            border: none;
+        }
+
+        #loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none; /* Inicialmente oculto */
+        }
+
+        .lds-ellipsis {
+            display: inline-block;
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+        
+        .lds-ellipsis div {
+            position: absolute;
+            top: 27px;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #000;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .lds-ellipsis div:nth-child(1) {
+            left: 6px;
+            animation: lds-ellipsis1 0.6s infinite;
+        }
+        
+        .lds-ellipsis div:nth-child(2) {
+            left: 6px;
+            animation: lds-ellipsis2 0.6s infinite;
+        }
+        
+        .lds-ellipsis div:nth-child(3) {
+            left: 26px;
+            animation: lds-ellipsis2 0.6s infinite;
+        }
+        
+        .lds-ellipsis div:nth-child(4) {
+            left: 45px;
+            animation: lds-ellipsis3 0.6s infinite;
+        }
+        
+        @keyframes lds-ellipsis1 {
+            0% {
+                transform: scale(0);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes lds-ellipsis3 {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(0);
+            }
+        }
+        
+        @keyframes lds-ellipsis2 {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(19px, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div id="sidebar-header">
+            IrisApiTester
+        </div>
+        <div id="menu">
+            <a href="#" id="run-test">Run test</a>
+            <a href="#">Test History</a>
+        </div>
+    </div>
+    <div id="content">
+        <!-- Contenido de la página aquí -->
+        <iframe id="iframe-container" src=""></iframe>
+        <div id="loading-indicator" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div>
+
+    <script>
+        const runTestLink = document.getElementById('run-test');
+        const iframe = document.getElementById('iframe-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        runTestLink.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            // Mostrar el indicador de carga
+            loadingIndicator.style.display = 'block';
+
+            // Cargar la respuesta de la llamada GET en el iframe
+            iframe.src = 'http://localhost:52773/pull_and_run_tests';
+
+            // Manejar la carga del iframe
+            iframe.addEventListener('load', function() {
+                // Ocultar el indicador de carga
+                loadingIndicator.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
