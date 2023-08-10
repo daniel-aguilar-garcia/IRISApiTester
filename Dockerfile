@@ -45,6 +45,7 @@ COPY iris.script /tmp/iris.script
 COPY src/web/index.html /usr/irissys/csp/user/index.html
 
 
+
 RUN iris start IRIS \
 	&& iris session IRIS < /tmp/iris.script \
     && iris stop IRIS quietly

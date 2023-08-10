@@ -165,6 +165,8 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             import subprocess
             import os
             import signal
+            import shutil
+            from datetime import datetime
 
             
             collection_file  = collectionFile
@@ -175,6 +177,21 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             process = subprocess.Popen(command, shell=True)
 
             process.wait()
+
+            # Generar id único
+            ahora = datetime.now()
+            anio = str(ahora.year).zfill(4)
+            mes = str(ahora.month).zfill(2)
+            dia = str(ahora.day).zfill(2)
+            hora = str(ahora.hour).zfill(2)
+            minutos = str(ahora.minute).zfill(2)
+            segundos = str(ahora.second).zfill(2)
+
+            identificador = f"{anio}{mes}{dia}{hora}{minutos}{segundos}"
+            reportHistoricPath = f'/irisdev/app/src/Executions/{identificador}.html'
+
+            # Copiar el archivo sobrescribiendo el destino si existe
+            shutil.copy(html_output_file, reportHistoricPath) 
 
             return html_output_file
 

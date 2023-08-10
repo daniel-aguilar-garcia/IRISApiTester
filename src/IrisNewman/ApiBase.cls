@@ -1,6 +1,6 @@
 Class IrisNewman.ApiBase Extends %CSP.REST [ System = 3 ]
 {
-    
+
 Parameter CHARSET = "utf-8";
 
 Parameter CONTENTTYPE = "application/json";
@@ -9,7 +9,7 @@ Parameter HandleCorsRequest = 1;
 
 Parameter PAGESIZE As INTEGER = 20;
 
-Parameter ApiKey = "";
+Parameter ApiKey;
 
 ClassMethod OnPreDispatch(pUrl As %String, pMethod As %String, ByRef pContinue As %Boolean) As %Status
 {
@@ -56,7 +56,7 @@ ClassMethod OnPreDispatch(pUrl As %String, pMethod As %String, ByRef pContinue A
   QUIT ##class(%iKnow.REST.Base).%ErrorHandler(tSC, .pContinue)
 }
 
-ClassMethod ValidateApiKey(pUrl As %String, pMethod As %String, ByRef pContinue As %Boolean)  As %Status
+ClassMethod ValidateApiKey(pUrl As %String, pMethod As %String, ByRef pContinue As %Boolean) As %Status
 {
   SET tSC = $$$OK
 
@@ -89,8 +89,6 @@ ClassMethod MustCheckApiKey(pUrl As %String, pMethod As %String) As %Boolean
 {
   Quit 1
 }
-
-
 
 ClassMethod %ProcessResult(pStatus As %Status = {$$$OK}, pResult As %DynamicObject = "") As %Status [ Internal ]
 {
@@ -140,4 +138,5 @@ ClassMethod ReportHttpStatusCode(pHttpStatus, pSC As %Status = {$$$OK}) As %Stat
       
   Return $$$OK
 }
+
 }
