@@ -7,6 +7,8 @@ Parameter collectionFile As %String = "/opt/irisapp/myCollection.json";
 
 Parameter collectionRepoPath As %String = "/opt/irisapp/";
 
+Parameter executionsTestsPath As %String = "/irisdev/app/src/Executions/";
+
 // "/opt/irisapp/src/testCollectionExample.json";
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
@@ -16,8 +18,12 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
     <Route Url="/run_tests" Method="POST" Call="RunTestsJSON" Cors="true"/>
     <!-- Update Collection and run test -->
     <Route Url="/pull_and_run_tests" Method="GET" Call="PullRunTestsJSON" Cors="true"/>
+    <!-- Update Collection run tests and return html file -->
+    <Route Url="/pull_run_and_report" Method="GET" Call="PullRunReport" Cors="true"/>
+    <!-- Update Collection run tests and return report file name -->
+    <Route Url="/pull_run_and_file" Method="GET" Call="PullRunFile" Cors="true"/>
     <!-- Show Report -->
-    <Route Url="/show_report" Method="GET" Call="ShowReport" Cors="true"/>
+    <Route Url="/show_report/:fileName" Method="GET" Call="ShowReport" Cors="true"/>
     <!-- example tests ok -->
     <Route Url="/test_ok" Method="GET" Call="TestOK" Cors="true"/>
     <!-- example tests ko -->
@@ -26,16 +32,25 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
     </Routes>
 }
 
-ClassMethod ShowReport() As %Status
+ClassMethod ShowReport(fileName As %String = "") As %Status
 {
+    #Dim pathFile As %String
     Set %response.ContentType = "text/html"
 
 
     Set archivo = ##class(%Stream.FileCharacter).%New()
     
     //Set ruta = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+
+    If (fileName '= "")
+    {
+        Set pathFile = ..#executionsTestsPath_fileName
+    }Else{
+        Set pathFile = ..#htmlOutputFile
+    }
     
-    If archivo.LinkToFile(..#htmlOutputFile) {
+    
+    If archivo.LinkToFile(pathFile) {
         
         Do archivo.OutputToDevice()
         
@@ -159,8 +174,64 @@ ClassMethod PullRunTestsJSON() As %Status
     Quit tSC
 }
 
+ClassMethod PullRunReport() As %Status
+{
+    #Dim outPutFile as %String;
+
+    Do ..DownloadCollectionFromRepo(..#collectionRepoPath,..#collectionFile)
+    
+    try {
+
+        Set source = %request.Content
+
+        Set outPutFile = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+        Do ..ShowReport(outPutFile)
+ 
+        Set tSC=$$$OK
+   
+    
+    } catch e {
+        Set tSC=e.AsStatus()
+        
+    }
+ 
+    Quit tSC
+}
+
+ClassMethod PullRunFile() As %Status
+{
+    #Dim outPutFile as %String;
+
+    Set objResponse = {}
+    Set objResponse.file = ""
+
+    
+    
+    try {
+        Do ..DownloadCollectionFromRepo(..#collectionRepoPath,..#collectionFile)
+
+        Set source = %request.Content
+
+        Set objResponse.file = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+        
+        
+
+        Set tSC=$$$OK
+   
+    
+    } catch e {
+        Set tSC=e.AsStatus()
+        
+    }
+    
+    Write objResponse.%ToJSON(),!
+
+    Quit tSC
+}
+
 ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %String) As %String [ Language = python ]
 {
+        reportHistoricFileName = ''
         try:
             import subprocess
             import os
@@ -188,12 +259,13 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             segundos = str(ahora.second).zfill(2)
 
             identificador = f"{anio}{mes}{dia}{hora}{minutos}{segundos}"
-            reportHistoricPath = f'/irisdev/app/src/Executions/{identificador}.html'
+            reportHistoricFileName = f'{identificador}.html'
+            reportHistoricPath = f'/irisdev/app/src/Executions/{reportHistoricFileName}'
 
             # Copiar el archivo sobrescribiendo el destino si existe
             shutil.copy(html_output_file, reportHistoricPath) 
 
-            return html_output_file
+            return reportHistoricFileName
 
            
         except subprocess.CalledProcessError as e:
@@ -201,7 +273,7 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
         except Exception as e:
             print(e)
 
-        return ''
+        return reportHistoricFileName
 }
 
 }
