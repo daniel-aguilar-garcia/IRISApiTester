@@ -16,14 +16,22 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Routes>
     <!-- Run tests -->
     <Route Url="/run_tests" Method="POST" Call="RunTestsJSON" Cors="true"/>
+
     <!-- Update Collection and run test -->
     <Route Url="/pull_and_run_tests" Method="GET" Call="PullRunTestsJSON" Cors="true"/>
+    
     <!-- Update Collection run tests and return html file -->
     <Route Url="/pull_run_and_report" Method="GET" Call="PullRunReport" Cors="true"/>
+    
+    <!-- Update Collection run tests and return report file name -->
+    <Route Url="/pull_run_and_file_json" Method="GET" Call="PullRunFileJson" Cors="true"/>
+
     <!-- Update Collection run tests and return report file name -->
     <Route Url="/pull_run_and_file" Method="GET" Call="PullRunFile" Cors="true"/>
+    
     <!-- Show Report -->
     <Route Url="/show_report/:fileName" Method="GET" Call="ShowReport" Cors="true"/>
+    
     <!-- example tests ok -->
     <Route Url="/test_ok" Method="GET" Call="TestOK" Cors="true"/>
     <!-- example tests ko -->
@@ -199,6 +207,34 @@ ClassMethod PullRunReport() As %Status
 }
 
 ClassMethod PullRunFile() As %Status
+{
+    #Dim outPutFile as %String;
+
+    Set outPutFile = ""
+    
+    try {
+        Do ..DownloadCollectionFromRepo(..#collectionRepoPath,..#collectionFile)
+
+        Set source = %request.Content
+
+        Set outPutFile = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+        
+        
+
+        Set tSC=$$$OK
+   
+    
+    } catch e {
+        Set tSC=e.AsStatus()
+        
+    }
+    
+    Write outPutFile,!
+
+    Quit tSC
+}
+
+ClassMethod PullRunFileJson() As %Status
 {
     #Dim outPutFile as %String;
 
