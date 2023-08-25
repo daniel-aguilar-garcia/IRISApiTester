@@ -27,10 +27,13 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
     <Route Url="/pull_run_and_file_json" Method="GET" Call="PullRunFileJson" Cors="true"/>
 
     <!-- Update Collection run tests and return report file name -->
-    <Route Url="/pull_run_and_file" Method="GET" Call="PullRunFile" Cors="true"/>
+    <Route Url="/pull_run_and_send_google" Method="GET" Call="PullRunSendGoogle" Cors="true"/>
     
     <!-- Show Report -->
     <Route Url="/show_report/:fileName" Method="GET" Call="ShowReport" Cors="true"/>
+
+    <!-- Get Collection test result -->
+    <Route Url="/get_test_result" Method="GET" Call="PullRunFileJson" Cors="true"/>
     
     <!-- example tests ok -->
     <Route Url="/test_ok" Method="GET" Call="TestOK" Cors="true"/>
@@ -68,6 +71,17 @@ ClassMethod ShowReport(fileName As %String = "") As %Status
 
     
     Quit $$$OK
+}
+
+ClassMethod GetConfigurationValue(attribute As %String) [ Language = python ]
+{
+    from configparser import ConfigParser
+    config = ConfigParser()
+    config.read('/opt/irisapp/repository.cfg')
+
+    value = config.get('repo', attribute).replace("'","")
+
+    return value
 }
 
 ClassMethod DownloadCollectionFromRepo(collectionRepoPath As %String, destinationFile As %String) [ Language = python ]
@@ -206,7 +220,7 @@ ClassMethod PullRunReport() As %Status
     Quit tSC
 }
 
-ClassMethod PullRunFile() As %Status
+ClassMethod PullRunSendGoogle() As %Status
 {
     #Dim outPutFile as %String;
 
@@ -218,8 +232,11 @@ ClassMethod PullRunFile() As %Status
         Set source = %request.Content
 
         Set outPutFile = ..RunCollectionTest(..#collectionFile, ..#htmlOutputFile)
+
+        Set webhook = ..GetConfigurationValue("webhook_google")
+        Set message = "http://localhost:52773/show_report/"_outPutFile
         
-        
+        Do ..SendGoogleChatMessage(webhook, message)
 
         Set tSC=$$$OK
    
@@ -229,9 +246,22 @@ ClassMethod PullRunFile() As %Status
         
     }
     
-    Write outPutFile,!
 
     Quit tSC
+}
+
+ClassMethod SendGoogleChatMessage(webhook As %String, message As %String) [ Language = python ]
+{
+    import requests
+
+    pythonMessage = {"text": message}
+
+    response = requests.post(webhook, json=pythonMessage)
+
+    if response.status_code == 200:
+        print("Mensaje enviado correctamente.")
+    else:
+        print("Error al enviar el mensaje. Código de estado:", response.status_code)
 }
 
 ClassMethod PullRunFileJson() As %Status
@@ -281,6 +311,8 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             
             command = f"newman run {collection_file} -r htmlextra --reporter-htmlextra-export {html_output_file} --reporter-htmlextra-title 'IRIS Api Tester'"
             
+            
+
             process = subprocess.Popen(command, shell=True)
 
             process.wait()
@@ -301,6 +333,8 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             # Copiar el archivo sobrescribiendo el destino si existe
             shutil.copy(html_output_file, reportHistoricPath) 
 
+            
+
             return reportHistoricFileName
 
            
@@ -310,6 +344,77 @@ ClassMethod RunCollectionTest(collectionFile As %String, htmlOutputFile As %Stri
             print(e)
 
         return reportHistoricFileName
+}
+
+ClassMethod GetTestResult(collectionFile As %String, htmlOutputFile As %String) As %Boolean [ Language = python ]
+{
+    import subprocess
+    import bs4
+
+    try:
+        #command = f"newman run {collectionFile} -s'"
+        command = f"newman run {collectionFile} -r, cli,htmlextra"
+            
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            print("Todos los tests pasaron sin errores.")
+            
+            
+        else:
+            print("Se encontraron errores en los tests.")
+
+
+        # Analiza el informe HTML.
+        soup = bs4.BeautifulSoup(result.stdout, "html.parser")
+
+        # Busca todos los elementos con la clase "failed".
+        failed_tests = soup.find_all("li", class_="failed")
+
+        
+
+        # Comprueba si hay algún test que haya fallado.
+        if failed_tests:
+            return False
+        else:
+            return True  
+
+
+    except Exception as e:
+            print(e)
+    
+    return False
+}
+
+ClassMethod RunReturnResult() As %Status
+{
+    #Dim outPutFile as %String;
+
+    Set objResponse = {}
+    Set objResponse.result = 0
+
+    
+    
+    try {
+        Do ..DownloadCollectionFromRepo(..#collectionRepoPath,..#collectionFile)
+
+        //Set source = %request.Content
+
+        Set objResponse.result = ..GetTestResult(..#collectionFile, ..#htmlOutputFile)
+        
+        
+
+        Set tSC=$$$OK
+   
+    
+    } catch e {
+        Set tSC=e.AsStatus()
+        
+    }
+    
+    Write objResponse.%ToJSON(),!
+
+    Quit tSC
 }
 
 }

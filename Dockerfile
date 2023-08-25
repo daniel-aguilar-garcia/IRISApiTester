@@ -33,6 +33,7 @@ RUN apt-get update && \
 
 ## Install configparser libraries
 RUN pip3 install --target /usr/irissys/mgr/python/ configparser
+RUN pip3 install requests
 COPY repository.cfg /opt/irisapp/repository.cfg
 
 
