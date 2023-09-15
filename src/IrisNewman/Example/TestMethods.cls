@@ -3,28 +3,34 @@ Class IrisNewman.Example.TestMethods Extends IrisNewman.Example.TestBase
 
 ClassMethod TestOK() As %Status
 {
+    Set testNumber = 1
+    Set a = 1
+    Set b = 2
+
+    Set res = ..SumNumbers(a,b)
+
+    Do ..assert(res,3,$G(%methodname),testNumber)
+
     Quit $$$OK
+}
+
+ClassMethod SumNumbers(numberA As %Integer, numberB As %Integer) As %Integer
+{
+    Return numberA + numberB
 }
 
 ClassMethod TestKO() As %Status
 {
-
-    Set %response.Status=401
-    Set message = ""
+    Set testNumber = 1
     Set a=1
     Set b=0
+    Set res=..SumNumbers(a,b)
     
     
-    try{
-        Set x= a / b
-        Write x
-    }catch(e)
-    {
-        Set message = e.DisplayString(1)
-    }
-
-
-    Quit $$$ERROR(5001,message)
+    Do ..assert(res,3,$G(%methodname),testNumber)
+        
+    
+    Quit $$$OK
 }
 
 ClassMethod TestAssert()
