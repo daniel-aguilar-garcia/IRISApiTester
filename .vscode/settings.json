@@ -1,8 +1,17 @@
 {
     "workbench.colorTheme": "InterSystems Default Dark",
     "objectscript.conn": {
-        "server": "default~iris",
         "ns": "USER",
-        "active": true
+        "active": true,
+        "docker-compose": {
+            "service": "iris",
+            "internalPort": 52773
+        },
+        "links": {
+            "PULL & RUN TESTS": "http://${host}:${port}/pull_and_run_tests",
+            "IrisNewman.Example.TestMethods": "http://${host}:${port}/run/IrisNewman.Example.TestMethods/TestOK",
+            "PULL, RUN & SEND GOOGLE ": "http://localhost:52773/pull_run_and_send_google",
+            "ADD TEST COLLECTION": "http://localhost:52773/csp/user/index.html"
+        }
     }
 }
